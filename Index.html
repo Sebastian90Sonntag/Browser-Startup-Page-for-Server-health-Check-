@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: center;
+        }
+
+        .auto-check-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .interval-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .status-dot.active {
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .last-check {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #45a049;
+        }
+
+        .btn-danger {
+            background: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+        }
+
+        .btn-warning:hover {
+            background: #e68900;
+        }
+
+        .categories {
+            display: grid;
+            gap: 20px;
+        }
+
+        .category {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .category-title {
+            font-size: 1.5rem;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .servers {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .server {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+        }
+
+        .server-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .server-info {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .server-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .status-online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-unknown {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .server-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖥️ Server Dashboard</h1>
+            <p>Verwalte deine Server und Kategorien</p>
+        </div>
+
+        <div class="controls">
+            <div>
+                <button class="btn" onclick="openCategoryModal()">+ Neue Kategorie</button>
+                <button class="btn" onclick="openServerModal()">+ Neuer Server</button>
+            </div>
+            
+            <div>
+                <button class="btn btn-warning" onclick="checkAllServers()">🔄 Status prüfen</button>
+            </div>
+            
+            <div class="auto-check-controls">
+                <label for="autoCheckInterval">Auto-Prüfung:</label>
+                <select id="autoCheckInterval" class="interval-select" onchange="updateAutoCheck()">
+                    <option value="0">Deaktiviert</option>
+                    <option value="30">30 Sekunden</option>
+                    <option value="60">1 Minute</option>
+                    <option value="300">5 Minuten</option>
+                    <option value="600">10 Minuten</option>
+                    <option value="1800">30 Minuten</option>
+                    <option value="3600">1 Stunde</option>
+                </select>
+            </div>
+            
+            <div class="status-indicator">
+                <div id="statusDot" class="status-dot"></div>
+                <span id="statusText">Auto-Prüfung deaktiviert</span>
+                <div id="lastCheck" class="last-check"></div>
+            </div>
+        </div>
+
+        <div id="categories" class="categories">
+            <!-- Kategorien werden hier dynamisch eingefügt -->
+        </div>
+    </div>
+
+    <!-- Kategorie Modal -->
+    <div id="categoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="categoryModalTitle">Neue Kategorie</h2>
+                <span class="close" onclick="closeCategoryModal()">&times;</span>
+            </div>
+            <form id="categoryForm">
+                <div class="form-group">
+                    <label for="categoryName">Kategorie Name:</label>
+                    <input type="text" id="categoryName" required>
+                </div>
+                <button type="submit" class="btn">Speichern</button>
+                <button type="button" class="btn btn-danger" onclick="closeCategoryModal()">Abbrechen</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Server Modal -->
+    <div id="serverModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="serverModalTitle">Neuer Server</h2>
+                <span class="close" onclick="closeServerModal()">&times;</span>
+            </div>
+            <form id="serverForm">
+                <div class="form-group">
+                    <label for="serverCategory">Kategorie:</label>
+                    <select id="serverCategory" required>
+                        <option value="">Kategorie wählen...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="serverName">Server Name:</label>
+                    <input type="text" id="serverName" required>
+                </div>
+                <div class="form-group">
+                    <label for="serverAddress">IP/Domain:</label>
+                    <input type="text" id="serverAddress" required>
+                </div>
+                <div class="form-group">
+                    <label for="serverDescription">Beschreibung:</label>
+                    <textarea id="serverDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="serverInterface">Interface Link:</label>
+                    <input type="url" id="serverInterface" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn">Speichern</button>
+                <button type="button" class="btn btn-danger" onclick="closeServerModal()">Abbrechen</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let data = {
+            categories: {},
+            nextCategoryId: 1,
+            nextServerId: 1,
+            autoCheckInterval: 0,
+            lastCheckTime: null
+        };
+
+        let editingCategory = null;
+        let editingServer = null;
+        let autoCheckTimer = null;
+
+        // Daten laden
+        function loadData() {
+            const saved = sessionStorage.getItem('serverDashboard');
+            if (saved) {
+                data = JSON.parse(saved);
+            } else {
+                // Beispieldaten hinzufügen
+                addExampleData();
+            }
+            renderCategories();
+            updateAutoCheckUI();
+            
+            // Auto-Check wiederherstellen wenn aktiviert
+            if (data.autoCheckInterval > 0) {
+                startAutoCheck();
+            }
+        }
+
+        // Daten speichern
+        function saveData() {
+            sessionStorage.setItem('serverDashboard', JSON.stringify(data));
+        }
+
+        // Beispieldaten
+        function addExampleData() {
+            data.categories['cat1'] = {
+                id: 'cat1',
+                name: 'Produktionsserver',
+                servers: {
+                    'srv1': {
+                        id: 'srv1',
+                        name: 'Web Server',
+                        address: '192.168.1.100',
+                        description: 'Hauptwebserver für die Unternehmenswebsite',
+                        interface: 'https://192.168.1.100/admin',
+                        status: 'unknown'
+                    }
+                }
+            };
+            data.categories['cat2'] = {
+                id: 'cat2',
+                name: 'Entwicklungsumgebung',
+                servers: {}
+            };
+            data.nextCategoryId = 3;
+            data.nextServerId = 2;
+            saveData();
+        }
+
+        // Kategorien rendern
+        function renderCategories() {
+            const container = document.getElementById('categories');
+            container.innerHTML = '';
+
+            if (Object.keys(data.categories).length === 0) {
+                container.innerHTML = '<div class="empty-state">Keine Kategorien vorhanden. Erstelle eine neue Kategorie um zu beginnen.</div>';
+                return;
+            }
+
+            Object.values(data.categories).forEach(category => {
+                const categoryElement = createCategoryElement(category);
+                container.appendChild(categoryElement);
+            });
+        }
+
+        // Kategorie Element erstellen
+        function createCategoryElement(category) {
+            const div = document.createElement('div');
+            div.className = 'category';
+            div.innerHTML = `
+                <div class="category-header">
+                    <h2 class="category-title">${category.name}</h2>
+                    <div>
+                        <button class="btn btn-small" onclick="editCategory('${category.id}')">Bearbeiten</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteCategory('${category.id}')">Löschen</button>
+                    </div>
+                </div>
+                <div class="servers" id="servers-${category.id}">
+                    ${Object.keys(category.servers).length === 0 ? 
+                        '<div class="empty-state">Keine Server in dieser Kategorie</div>' : 
+                        Object.values(category.servers).map(server => createServerHTML(server)).join('')
+                    }
+                </div>
+            `;
+            return div;
+        }
+
+        // Server HTML erstellen
+        function createServerHTML(server) {
+            const statusClass = server.status === 'online' ? 'status-online' : 
+                               server.status === 'offline' ? 'status-offline' : 'status-unknown';
+            const statusText = server.status === 'online' ? 'Online' : 
+                              server.status === 'offline' ? 'Offline' : 'Unbekannt';
+
+            return `
+                <div class="server">
+                    <div class="server-name">${server.name}</div>
+                    <div class="server-info">📍 ${server.address}</div>
+                    <div class="server-info">📝 ${server.description || 'Keine Beschreibung'}</div>
+                    <div class="server-status ${statusClass}">${statusText}</div>
+                    <div class="server-actions">
+                        ${server.interface ? `<button class="btn btn-small" onclick="window.open('${server.interface}', '_blank')">Interface öffnen</button>` : ''}
+                        <button class="btn btn-small btn-warning" onclick="editServer('${server.id}')">Bearbeiten</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteServer('${server.id}')">Löschen</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Kategorie Modal öffnen
+        function openCategoryModal(categoryId = null) {
+            editingCategory = categoryId;
+            const modal = document.getElementById('categoryModal');
+            const title = document.getElementById('categoryModalTitle');
+            const nameInput = document.getElementById('categoryName');
+
+            if (categoryId) {
+                title.textContent = 'Kategorie bearbeiten';
+                nameInput.value = data.categories[categoryId].name;
+            } else {
+                title.textContent = 'Neue Kategorie';
+                nameInput.value = '';
+            }
+
+            modal.style.display = 'block';
+        }
+
+        // Kategorie Modal schließen
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').style.display = 'none';
+            editingCategory = null;
+        }
+
+        // Server Modal öffnen
+        function openServerModal(serverId = null) {
+            editingServer = serverId;
+            const modal = document.getElementById('serverModal');
+            const title = document.getElementById('serverModalTitle');
+            const categorySelect = document.getElementById('serverCategory');
+
+            // Kategorien in Select laden
+            categorySelect.innerHTML = '<option value="">Kategorie wählen...</option>';
+            Object.values(data.categories).forEach(category => {
+                categorySelect.innerHTML += `<option value="${category.id}">${category.name}</option>`;
+            });
+
+            if (serverId) {
+                title.textContent = 'Server bearbeiten';
+                const server = findServerById(serverId);
+                if (server) {
+                    document.getElementById('serverName').value = server.name;
+                    document.getElementById('serverAddress').value = server.address;
+                    document.getElementById('serverDescription').value = server.description || '';
+                    document.getElementById('serverInterface').value = server.interface || '';
+                    categorySelect.value = findCategoryByServerId(serverId);
+                }
+            } else {
+                title.textContent = 'Neuer Server';
+                document.getElementById('serverForm').reset();
+            }
+
+            modal.style.display = 'block';
+        }
+
+        // Server Modal schließen
+        function closeServerModal() {
+            document.getElementById('serverModal').style.display = 'none';
+            editingServer = null;
+        }
+
+        // Kategorie Form Submit
+        document.getElementById('categoryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('categoryName').value.trim();
+
+            if (editingCategory) {
+                data.categories[editingCategory].name = name;
+            } else {
+                const id = 'cat' + data.nextCategoryId++;
+                data.categories[id] = {
+                    id: id,
+                    name: name,
+                    servers: {}
+                };
+            }
+
+            saveData();
+            renderCategories();
+            closeCategoryModal();
+        });
+
+        // Server Form Submit
+        document.getElementById('serverForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const categoryId = document.getElementById('serverCategory').value;
+            const name = document.getElementById('serverName').value.trim();
+            const address = document.getElementById('serverAddress').value.trim();
+            const description = document.getElementById('serverDescription').value.trim();
+            const interfaceUrl = document.getElementById('serverInterface').value.trim();
+
+            if (editingServer) {
+                const oldCategoryId = findCategoryByServerId(editingServer);
+                const server = data.categories[oldCategoryId].servers[editingServer];
+                
+                // Server aus alter Kategorie entfernen
+                delete data.categories[oldCategoryId].servers[editingServer];
+                
+                // Server in neue Kategorie einfügen
+                server.name = name;
+                server.address = address;
+                server.description = description;
+                server.interface = interfaceUrl;
+                data.categories[categoryId].servers[editingServer] = server;
+            } else {
+                const id = 'srv' + data.nextServerId++;
+                data.categories[categoryId].servers[id] = {
+                    id: id,
+                    name: name,
+                    address: address,
+                    description: description,
+                    interface: interfaceUrl,
+                    status: 'unknown'
+                };
+            }
+
+            saveData();
+            renderCategories();
+            closeServerModal();
+        });
+
+        // Hilfsfunktionen
+        function findServerById(serverId) {
+            for (const category of Object.values(data.categories)) {
+                if (category.servers[serverId]) {
+                    return category.servers[serverId];
+                }
+            }
+            return null;
+        }
+
+        function findCategoryByServerId(serverId) {
+            for (const category of Object.values(data.categories)) {
+                if (category.servers[serverId]) {
+                    return category.id;
+                }
+            }
+            return null;
+        }
+
+        // Kategorie bearbeiten
+        function editCategory(categoryId) {
+            openCategoryModal(categoryId);
+        }
+
+        // Kategorie löschen
+        function deleteCategory(categoryId) {
+            if (confirm('Möchten Sie diese Kategorie und alle enthaltenen Server wirklich löschen?')) {
+                delete data.categories[categoryId];
+                saveData();
+                renderCategories();
+            }
+        }
+
+        // Server bearbeiten
+        function editServer(serverId) {
+            openServerModal(serverId);
+        }
+
+        // Server löschen
+        function deleteServer(serverId) {
+            if (confirm('Möchten Sie diesen Server wirklich löschen?')) {
+                const categoryId = findCategoryByServerId(serverId);
+                delete data.categories[categoryId].servers[serverId];
+                saveData();
+                renderCategories();
+            }
+        }
+
+        // Server Status prüfen (simuliert)
+        function checkAllServers() {
+            console.log('Prüfe Server-Status...');
+            
+            for (const category of Object.values(data.categories)) {
+                for (const server of Object.values(category.servers)) {
+                    // Simulierte Statusprüfung (in der Realität würde hier ein Ping/HTTP-Request stattfinden)
+                    server.status = Math.random() > 0.3 ? 'online' : 'offline';
+                }
+            }
+            
+            data.lastCheckTime = new Date().toISOString();
+            saveData();
+            renderCategories();
+            updateLastCheckDisplay();
+        }
+
+        // Auto-Check Funktionen
+        function updateAutoCheck() {
+            const interval = parseInt(document.getElementById('autoCheckInterval').value);
+            data.autoCheckInterval = interval;
+            saveData();
+            
+            if (interval > 0) {
+                startAutoCheck();
+            } else {
+                stopAutoCheck();
+            }
+            updateAutoCheckUI();
+        }
+
+        function startAutoCheck() {
+            stopAutoCheck(); // Vorherigen Timer stoppen
+            
+            if (data.autoCheckInterval > 0) {
+                autoCheckTimer = setInterval(() => {
+                    checkAllServers();
+                }, data.autoCheckInterval * 1000);
+                
+                console.log(`Auto-Check gestartet: alle ${data.autoCheckInterval} Sekunden`);
+            }
+        }
+
+        function stopAutoCheck() {
+            if (autoCheckTimer) {
+                clearInterval(autoCheckTimer);
+                autoCheckTimer = null;
+                console.log('Auto-Check gestoppt');
+            }
+        }
+
+        function updateAutoCheckUI() {
+            const intervalSelect = document.getElementById('autoCheckInterval');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            intervalSelect.value = data.autoCheckInterval;
+            
+            if (data.autoCheckInterval > 0) {
+                statusDot.classList.add('active');
+                const intervalText = getIntervalText(data.autoCheckInterval);
+                statusText.textContent = `Automatische Prüfung aktiv (${intervalText})`;
+            } else {
+                statusDot.classList.remove('active');
+                statusText.textContent = 'Auto-Prüfung deaktiviert';
+            }
+            
+            updateLastCheckDisplay();
+        }
+
+        function getIntervalText(seconds) {
+            if (seconds < 60) return `${seconds}s`;
+            if (seconds < 3600) return `${seconds/60}min`;
+            return `${seconds/3600}h`;
+        }
+
+        function updateLastCheckDisplay() {
+            const lastCheckDiv = document.getElementById('lastCheck');
+            if (data.lastCheckTime) {
+                const lastCheck = new Date(data.lastCheckTime);
+                const now = new Date();
+                const diffMs = now - lastCheck;
+                const diffMins = Math.floor(diffMs / 60000);
+                
+                if (diffMins < 1) {
+                    lastCheckDiv.textContent = 'Zuletzt geprüft: gerade eben';
+                } else if (diffMins < 60) {
+                    lastCheckDiv.textContent = `Zuletzt geprüft: vor ${diffMins} Min`;
+                } else {
+                    const diffHours = Math.floor(diffMins / 60);
+                    lastCheckDiv.textContent = `Zuletzt geprüft: vor ${diffHours}h ${diffMins % 60}min`;
+                }
+            } else {
+                lastCheckDiv.textContent = '';
+            }
+        }
+
+        // Modal schließen bei Klick außerhalb
+        window.onclick = function(event) {
+            const categoryModal = document.getElementById('categoryModal');
+            const serverModal = document.getElementById('serverModal');
+            if (event.target === categoryModal) {
+                closeCategoryModal();
+            }
+            if (event.target === serverModal) {
+                closeServerModal();
+            }
+        }
+
+        // Initialisierung
+        window.onload = function() {
+            loadData();
+            
+            // Last-Check-Zeit alle 30 Sekunden aktualisieren
+            setInterval(updateLastCheckDisplay, 30000);
+        };
+
+        // Cleanup beim Verlassen der Seite
+        window.onbeforeunload = function() {
+            stopAutoCheck();
+        };
+    </script>
+</body>
+</html>
