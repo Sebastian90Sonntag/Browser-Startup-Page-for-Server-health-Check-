@@ -1,46 +1,33 @@
-# 🖥️ Server Health Dashboard
+# Browser Startup Page – Server Health Check
 
-Eine leichtgewichtige Browser-Startseite zur Überwachung und Verwaltung von Servern — als einzelne HTML-Datei ohne Backend-Abhängigkeiten.
+![HTML Validate](https://github.com/Sebastian90Sonntag/Browser-Startup-Page-for-Server-health-Check-/actions/workflows/validate.yml/badge.svg)
+
+A lightweight browser startup page that monitors server health at a glance. Built with vanilla HTML, CSS, and JavaScript — no frameworks, no dependencies.
 
 ## Features
 
-- **Server-Management** — Server mit Name, IP/Domain, Beschreibung und Interface-Link anlegen, bearbeiten und löschen
-- **Kategorien** — Server in frei definierbare Kategorien organisieren (z. B. Produktion, Entwicklung, Staging)
-- **Status-Prüfung** — Alle Server auf einmal prüfen (Online / Offline / Unbekannt)
-- **Auto-Check** — Konfigurierbare automatische Statusprüfung (30s bis 1h Intervall)
-- **Interface-Links** — Direkter Zugriff auf Server-Webinterfaces per Klick
-- **Responsive Design** — Funktioniert auf Desktop und Mobilgeräten
-- **Zero Dependencies** — Reine HTML/CSS/JavaScript-Lösung, kein Build-Prozess nötig
+- Real-time server health status dashboard
+- Configurable server endpoints
+- Responsive CSS3 design
+- Single HTML file — easy to deploy
 
-## Vorschau
+## Usage
 
-Das Dashboard zeigt Server-Karten mit Statusanzeige, gruppiert nach Kategorien. Ein Control-Panel ermöglicht das Hinzufügen neuer Server/Kategorien und die Steuerung der automatischen Prüfung.
+1. Clone or download the repository
+   ```bash
+   git clone https://github.com/Sebastian90Sonntag/Browser-Startup-Page-for-Server-health-Check-.git
+   ```
+2. Open `Index.html` in your browser
+3. Set it as your browser's startup page
 
-## Verwendung
+## Configuration
 
-1. `Index.html` im Browser öffnen
-2. Kategorien anlegen (z. B. "Produktionsserver", "Entwicklungsumgebung")
-3. Server mit IP/Domain und optionalem Interface-Link hinzufügen
-4. "Status prüfen" klicken oder Auto-Check aktivieren
+Edit the server URLs directly in `Index.html` to match your infrastructure.
 
-> **Hinweis:** Daten werden im `sessionStorage` des Browsers gespeichert und sind nur für die aktuelle Sitzung verfügbar.
+## CI
 
-## Tech Stack
+GitHub Actions validates HTML with **HTMLHint** on every push and PR to `main`.
 
-| Technologie | Verwendung |
-|-------------|------------|
-| HTML5 | Struktur & Modals |
-| CSS3 | Grid-Layout, Responsive Design, Animationen |
-| JavaScript (Vanilla) | DOM-Manipulation, sessionStorage, Timer |
+---
 
-## Projektstruktur
-
-```
-Browser-Startup-Page-for-Server-health-Check-/
-├── Index.html    # Komplette Anwendung (HTML + CSS + JS)
-└── README.md
-```
-
-## Autor
-
-**Sebastian Sonntag** — 2025
+**Author:** Sebastian Sonntag
